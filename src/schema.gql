@@ -107,6 +107,7 @@ type ChatMessage {
   richContent: RichMessageContent
   reactions: [Reaction!]
   isSenderBlocked: Boolean
+  tags: [String!]
 }
 
 """
