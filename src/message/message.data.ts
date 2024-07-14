@@ -29,7 +29,7 @@ export class MessageData {
     chatMessage.conversationId = data.conversationId;
     chatMessage.created = new Date();
     chatMessage.deleted = false;
-
+    chatMessage.tags = [];
     createRichContent(data, chatMessage);
 
     const dbResult = await chatMessage.save();
@@ -156,6 +156,85 @@ export class MessageData {
     return chatMessageToObject(unlike);
   }
 
+  /**
+   * ADD TAG TO MESSAGE
+   */
+  async addTag(
+    tag: string,
+    userId: ObjectID,
+    reactionUnicode: string,
+    messageId: ObjectID,
+  ): Promise<ChatMessage> {
+    const updatedResult = await this.chatMessageModel.bulkWrite([
+      {
+        updateOne: {
+          filter: {
+            _id: messageId,
+            reactions: {
+              $not: {
+                $elemMatch: { tag: tag },
+              },
+            },
+          },
+          update: {
+            $push: {
+              reactions: {
+                tag: tag,
+                userIds: [userId],
+                reactionUnicode: reactionUnicode,
+              },
+            },
+          },
+        },
+      },
+    ]);
+    if (!updatedResult || updatedResult.matchedCount === 0) {
+      throw new Error(
+        `Failed to add tags, messageId: ${messageId.toHexString()}, reaction: ${tag}, userId: ${userId.toHexString()}`,
+      );
+    }
+
+    return this.getMessage(messageId.toHexString());
+  }
+
+  /**
+   * REMOVE TAGS
+   * @param tag 
+   * @param userId 
+   * @param messageId 
+   * @returns 
+   */
+  async removeTag(
+    tag: string,
+    userId: ObjectID,
+    messageId: ObjectID,
+  ): Promise<ChatMessage> {
+    const updatedResult = await this.chatMessageModel.bulkWrite([
+      {
+        updateOne: {
+          filter: {
+            _id: messageId,
+            reactions: {
+              $elemMatch: { tags: tag, userIds: [] },
+            },
+          },
+          update: {
+            $pull: { tags: { tag: tag } },
+          },
+        },
+      },
+    ]);
+
+    if (!updatedResult || updatedResult.matchedCount === 0) {
+      throw new Error(
+        `Failed to remove tags, messageId: ${messageId.toHexString()}, tag: ${tag}, userId: ${userId.toHexString()}`,
+      );
+    }
+
+    return this.getMessage(messageId.toHexString());
+  }
+
+
   async addReaction(
     reaction: string,
     userId: ObjectID,
@@ -203,7 +282,6 @@ export class MessageData {
         `Failed to add reaction, messageId: ${messageId.toHexString()}, reaction: ${reaction}, userId: ${userId.toHexString()}`,
       );
     }
-
     return this.getMessage(messageId.toHexString());
   }
 

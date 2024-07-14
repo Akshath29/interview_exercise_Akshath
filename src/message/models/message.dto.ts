@@ -179,7 +179,7 @@ export class ReactionDto {
 }
 
 @InputType()
-export class AddMessageTag {
+export class AddMessageTagDto {
   @Field(() => String)
   tag: string;
 
