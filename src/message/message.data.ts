@@ -169,13 +169,6 @@ export class MessageData {
     return chatMessageToObject(unlike);
   }
 
-  /**
-   * Add tag to specified message
-   * @param tag 
-   * @param userId 
-   * @param messageId 
-   * @returns message
-   */
   async addTag(
     tag: string,
     userId: ObjectID,
@@ -211,13 +204,6 @@ export class MessageData {
     return this.getMessage(messageId.toHexString());
   }
 
-  /**
-   * Remove tag from specified message
-   * @param tag 
-   * @param userId 
-   * @param messageId 
-   * @returns message
-   */
   async removeTag(
     tag: string,
     userId: ObjectID,
@@ -352,12 +338,6 @@ export class MessageData {
     return chatMessages.map((chatMessage) => chatMessageToObject(chatMessage));
   }
 
-  /**
-   * Return list of messages that have the specified conversation Ids and tags
-   * @param conversationIds 
-   * @param tagsRequested 
-   * @returns 
-   */
   async getMessagesGroupedByTags(
     conversationIds: ObjectID[],
     tagsRequested?: string[],
