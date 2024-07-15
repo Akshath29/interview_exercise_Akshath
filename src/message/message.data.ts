@@ -24,6 +24,7 @@ export class MessageData {
     senderId: ObjectID,
   ): Promise<ChatMessageModel> {
     const chatMessage = new this.chatMessageModel();
+
     chatMessage.text = data.text;
     chatMessage.senderId = senderId;
     chatMessage.conversationId = data.conversationId;
@@ -88,8 +89,20 @@ export class MessageData {
   }
 
   async delete(messageId: ObjectID): Promise<ChatMessage> {
-    // TODO allow a message to be marked as deleted
-    return new ChatMessage() // Minimum to pass ts checks -replace this
+    const filterBy = { _id: messageId };
+    const updateProperty = { deleted: true};
+    const msg = await this.chatMessageModel.findOneAndUpdate(
+      filterBy,
+      updateProperty,
+      {
+        new: true,
+        returnOriginal: false,
+      },
+    );
+    if (!msg){
+      throw new Error('The message to delete does not exist')
+    }
+    return chatMessageToObject(msg);
   }
 
   async resolve(messageId: ObjectID): Promise<ChatMessage> {
@@ -162,7 +175,6 @@ export class MessageData {
   async addTag(
     tag: string,
     userId: ObjectID,
-    reactionUnicode: string,
     messageId: ObjectID,
   ): Promise<ChatMessage> {
     const updatedResult = await this.chatMessageModel.bulkWrite([
@@ -170,30 +182,28 @@ export class MessageData {
         updateOne: {
           filter: {
             _id: messageId,
-            reactions: {
+            tags: {
               $not: {
-                $elemMatch: { tag: tag },
+                $elemMatch: {tag : tag},
               },
             },
           },
           update: {
             $push: {
-              reactions: {
-                tag: tag,
-                userIds: [userId],
-                reactionUnicode: reactionUnicode,
-              },
+              tags: {tag: tag}
             },
           },
         },
       },
     ]);
-    if (!updatedResult || updatedResult.matchedCount === 0) {
+    if (!updatedResult) {
       throw new Error(
-        `Failed to add tags, messageId: ${messageId.toHexString()}, reaction: ${tag}, userId: ${userId.toHexString()}`,
+        `Failed to add tags, messageId: ${messageId.toHexString()}, tag: ${tag}, userId: ${userId.toHexString()}`,
       );
+    } 
+    if (updatedResult.matchedCount === 0){
+      console.log(`tag ${tag} has already been added to message ${messageId.toHexString()}!`)
     }
-
     return this.getMessage(messageId.toHexString());
   }
 
@@ -214,23 +224,26 @@ export class MessageData {
         updateOne: {
           filter: {
             _id: messageId,
-            reactions: {
-              $elemMatch: { tags: tag, userIds: [] },
+            tags: {
+                $elemMatch: {tag : tag},
             },
           },
           update: {
-            $pull: { tags: { tag: tag } },
+            $pull: {
+              tags: {tag : tag}
+            },
           },
         },
       },
     ]);
-
-    if (!updatedResult || updatedResult.matchedCount === 0) {
+    if (!updatedResult) {
       throw new Error(
         `Failed to remove tags, messageId: ${messageId.toHexString()}, tag: ${tag}, userId: ${userId.toHexString()}`,
       );
     }
-
+    if (updatedResult.matchedCount === 0){
+      console.log(`Either tag requested to remove does not exist or no tags for message!`)
+    }
     return this.getMessage(messageId.toHexString());
   }
 
@@ -335,6 +348,44 @@ export class MessageData {
     return chatMessages.map((chatMessage) => chatMessageToObject(chatMessage));
   }
 
+  async getMessagesGroupedByTopic(
+    conversationIds: ObjectID[],
+    tag?: string[],
+  ): Promise<MessageGroupedByConversationOutput[]> {
+    const matchQuery: FilterQuery<ChatMessage> = {
+      $match: {
+        conversationId: {
+          $in: conversationIds,
+        },
+        tags: {
+          $elemMatch : {tag : tag}
+        } 
+      },
+    };
+    const groupedChatMessages = await this.chatMessageModel.aggregate([
+      matchQuery,
+      {
+        $group: {
+          _id: '$conversationId',
+          messages: {
+            $push: {
+              senderId: '$senderId',
+              message: '$text',
+            },
+          },
+        },
+      },
+      {
+        $project: {
+          conversationId: '$_id',
+          tag : tag,
+          messages: 1,
+        },
+      },
+    ]);
+    return groupedChatMessages;
+  }
+
   async getMessagesGroupedByConversation(
     conversationIds: ObjectID[],
     startDate?: string,
@@ -350,7 +401,7 @@ export class MessageData {
 
     if (startDate && endDate) {
       matchQuery['$match']['created'] = {
-        $gte: new Date(new Date(startDate).setHours(0, 0, 0, 0)),
+        $gte: new Date(new Date(startDate).setHours(0, 0, 0, 0)), 
         $lte: new Date(new Date(endDate).setHours(23, 59, 59, 999)),
       };
     }

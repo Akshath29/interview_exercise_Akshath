@@ -115,7 +115,7 @@ describe('MessageData', () => {
         { conversationId, text: 'Message to delete' },
         senderId,
       );
-
+      
       // Make sure that it started off as not deleted
       expect(message.deleted).toEqual(false);
 
@@ -124,4 +124,138 @@ describe('MessageData', () => {
       expect(deletedMessage.deleted).toEqual(true);
     });
   });
+
+  describe('Adding tags to messages', () => {
+    it('successfully adds a tag', async () => {
+      const conversationIdAdd = new ObjectID();
+      const message = await messageData.create(
+        { conversationId : conversationIdAdd, text: 'Hello world' },
+        senderId,
+      );
+      const msg = await messageData.addTag("tagx", senderId, message.id);
+      expect(msg).toMatchObject(
+        {
+          likes: [],
+          resolved: false,
+          deleted: false,
+          reactions: [],
+          text: 'Hello world',
+          senderId: senderId,
+          conversationId: conversationIdAdd,
+          conversation: { id: conversationIdAdd.toHexString() },
+          likesCount: 0,
+          sender: { id: senderId.toHexString() },
+          tags: [{"tag" : "tagx"}]
+        }
+      );
+
+    });
+
+    it('Ensure duplicate tags are not added', async () => {
+      const conversationIdDup = new ObjectID();
+      const message = await messageData.create(
+        { conversationId : conversationIdDup, text: 'Hello world' },
+        senderId,
+      );
+      const msg = await messageData.addTag("tagx", senderId, message.id);
+      const msgDupTag = await messageData.addTag("tagx", senderId, msg.id);
+      expect(msgDupTag).toMatchObject(
+        {
+          likes: [],
+          resolved: false,
+          deleted: false,
+          reactions: [],
+          text: 'Hello world',
+          senderId: senderId,
+          conversationId: conversationIdDup,
+          conversation: { id: conversationIdDup.toHexString() },
+          likesCount: 0,
+          sender: { id: senderId.toHexString() },
+          tags: [{"tag" : "tagx"}]
+        }
+      );
+    });
+   });
+
+   describe('Removing tags from messages', () => {
+    it('successfully removes a tag', async () => {
+      const conversationIdRem = new ObjectID();
+      const message = await messageData.create(
+        { conversationId : conversationIdRem, text: 'Hello world' },
+        senderId,
+      );
+      const msgAddTag = await messageData.addTag("tagx", senderId, message.id);
+      const msgRemoveTag = await messageData.removeTag("tagx", senderId, msgAddTag.id);
+      expect(msgRemoveTag).toMatchObject(
+        {
+          likes: [],
+          resolved: false,
+          deleted: false,
+          reactions: [],
+          text: 'Hello world',
+          senderId: senderId,
+          conversationId: conversationIdRem,
+          conversation: { id: conversationIdRem.toHexString() },
+          likesCount: 0,
+          sender: { id: senderId.toHexString() },
+          tags: []
+        }
+      );
+
+    });
+
+    it('Remove tags that are added much earlier than current tag', async () => {
+      const conversationIdDup = new ObjectID();
+      const message = await messageData.create(
+        { conversationId : conversationIdDup, text: 'Hello world' },
+        senderId,
+      );
+      const msg = await messageData.addTag("tagx", senderId, message.id);
+      const msg2 = await messageData.addTag("tagy", senderId, msg.id);
+      const msg3 = await messageData.addTag("tagz", senderId, msg2.id);
+      const msg4 = await messageData.removeTag("tagx", senderId, msg3.id)
+      expect(msg4).toMatchObject(
+        {
+          likes: [],
+          resolved: false,
+          deleted: false,
+          reactions: [],
+          text: 'Hello world',
+          senderId: senderId,
+          conversationId: conversationIdDup,
+          conversation: { id: conversationIdDup.toHexString() },
+          likesCount: 0,
+          sender: { id: senderId.toHexString() },
+          tags: [{"tag" : "tagy"}, {"tag" : "tagz"}]
+        }
+      );
+    });
+
+    it('Does not cause issue if removing from empty tag list', async () => {
+      const conversationIdEmpty = new ObjectID();
+      const message = await messageData.create(
+        { conversationId : conversationIdEmpty, text: 'Hello world' },
+        senderId,
+      );
+      const msgAddTag = await messageData.removeTag("tagx", senderId, message.id);
+      expect(msgAddTag).toMatchObject(
+        {
+          likes: [],
+          resolved: false,
+          deleted: false,
+          reactions: [],
+          text: 'Hello world',
+          senderId: senderId,
+          conversationId: conversationIdEmpty,
+          conversation: { id: conversationIdEmpty.toHexString() },
+          likesCount: 0,
+          sender: { id: senderId.toHexString() },
+          tags: []
+        }
+      );
+
+    });
+
+  });
+
 });
