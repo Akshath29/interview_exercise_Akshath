@@ -170,7 +170,11 @@ export class MessageData {
   }
 
   /**
-   * ADD TAG TO MESSAGE
+   * Add tag to specified message
+   * @param tag 
+   * @param userId 
+   * @param messageId 
+   * @returns message
    */
   async addTag(
     tag: string,
@@ -208,11 +212,11 @@ export class MessageData {
   }
 
   /**
-   * REMOVE TAGS
+   * Remove tag from specified message
    * @param tag 
    * @param userId 
    * @param messageId 
-   * @returns 
+   * @returns message
    */
   async removeTag(
     tag: string,
@@ -348,7 +352,13 @@ export class MessageData {
     return chatMessages.map((chatMessage) => chatMessageToObject(chatMessage));
   }
 
-  async getMessagesGroupedByTag(
+  /**
+   * Return list of messages that have the specified conversation Ids and tags
+   * @param conversationIds 
+   * @param tagsRequested 
+   * @returns 
+   */
+  async getMessagesGroupedByTags(
     conversationIds: ObjectID[],
     tagsRequested?: string[],
   ): Promise<MessageGroupedByTagOutput[]> {

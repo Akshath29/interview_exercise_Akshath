@@ -126,7 +126,7 @@ describe('MessageData', () => {
   });
 
   describe('Adding tags to messages', () => {
-    it('successfully adds a tag', async () => {
+    it('should successfully add a tag', async () => {
       const conversationIdAdd = new ObjectID();
       const message = await messageData.create(
         { conversationId : conversationIdAdd, text: 'Hello world' },
@@ -178,7 +178,7 @@ describe('MessageData', () => {
    });
 
    describe('Removing tags from messages', () => {
-    it('successfully removes a tag', async () => {
+    it('Should successfully remove specified tag', async () => {
       const conversationIdRem = new ObjectID();
       const message = await messageData.create(
         { conversationId : conversationIdRem, text: 'Hello world' },
@@ -231,7 +231,7 @@ describe('MessageData', () => {
       );
     });
 
-    it('Does not cause issue if removing from empty tag list', async () => {
+    it('Return the same message back when attempting to remove tag from empty list', async () => {
       const conversationIdEmpty = new ObjectID();
       const message = await messageData.create(
         { conversationId : conversationIdEmpty, text: 'Hello world' },
@@ -259,7 +259,7 @@ describe('MessageData', () => {
   });
 
   describe('Removing tags from messages', () => {
-    it('successfully removes a tag', async () => {
+    it('Should successfully remove a tag', async () => {
       const conversationIdRem = new ObjectID();
       const message = await messageData.create(
         { conversationId : conversationIdRem, text: 'Hello world' },
@@ -295,7 +295,7 @@ describe('MessageData', () => {
         { conversationId : conversationIdFind, text: 'This message has tagy' , tags : ["tagy"]},
         senderId,
       );
-      const allmsgs = await messageData.getMessagesGroupedByTag([conversationIdFind], ["tagx"])
+      const allmsgs = await messageData.getMessagesGroupedByTags([conversationIdFind], ["tagx"])
       expect(allmsgs).toMatchObject(
         [{"_id": ["tagx"], "messages": [{"message": "This message has tagx"}]}]
       );
@@ -318,8 +318,8 @@ describe('MessageData', () => {
       { conversationId : new ObjectID(), text: 'This message has tagx but not the right conversation Id' , tags : ["tagx"]},
       senderId,
     );
-    const msgsWithTagX = await messageData.getMessagesGroupedByTag([conversationIdFind2], ["tagx"])
-    const allmsgs = await messageData.getMessagesGroupedByTag([conversationIdFind2], ["tagx", "tagy"])
+    const msgsWithTagX = await messageData.getMessagesGroupedByTags([conversationIdFind2], ["tagx"])
+    const allmsgs = await messageData.getMessagesGroupedByTags([conversationIdFind2], ["tagx", "tagy"])
     expect(msgsWithTagX).toMatchObject(
       [{"_id": ["tagx"], "messages": [{"message": "This message has tagx"}]}]
     );

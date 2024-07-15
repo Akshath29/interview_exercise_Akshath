@@ -184,6 +184,9 @@ export class ReactionDto {
 @InputType()
 export class AddMessageTagDto {
   @Field(() => ObjectID)
+  userId : ObjectID;
+
+  @Field(() => ObjectID)
   conversationId: ObjectID;
 
   @Field(() => ObjectID)
@@ -191,10 +194,14 @@ export class AddMessageTagDto {
 
   @Field(() => String)
   tag: string;
+
 }
 
 @InputType()
 export class RemoveMessageTagDto {
+  @Field(() => ObjectID)
+  userId : ObjectID;
+  
   @Field(() => ObjectID)
   conversationId: ObjectID;
 

@@ -13,6 +13,8 @@ import {
   ResolveMessageDto,
   ReactionDto,
   PollOptionDto,
+  AddMessageTagDto,
+  RemoveMessageTagDto,
 } from './models/message.dto';
 import { MessageData } from './message.data';
 import { IAuthenticatedUser } from '../authentication/jwt.strategy';
@@ -29,6 +31,8 @@ import {
   UnresolveMessageEvent,
   ReactedMessageEvent,
   UnReactedMessageEvent,
+  AddTagEvent,
+  RemoveTagEvent,
 } from '../conversation/conversation-channel.socket';
 import { UserService } from '../user/user.service';
 import { ConversationData } from '../conversation/conversation.data';
@@ -47,6 +51,7 @@ import {
   MessageGroupedByConversationOutput,
   MessagesFilterInput,
 } from '../conversation/models/messagesFilterInput';
+import { MessagesTagFilterInput } from '../conversation/models/messageTagFilterInput';
 
 export interface IMessageLogic {
   create(
@@ -318,6 +323,14 @@ export class MessageLogic implements IMessageLogic {
     return paginatedChatMessages;
   }
 
+  async getMessagesByTags(messagesFilterInput: MessagesTagFilterInput) {
+    const { conversationIds, tag } = messagesFilterInput;
+    return await this.messageData.getMessagesGroupedByTags(
+      conversationIds.map((id) => new Types.ObjectId(id)),
+      tag,
+    );
+  }
+
   async getMessagesByConversation(messagesFilterInput: MessagesFilterInput) {
     const { conversationIds, startDate, endDate } = messagesFilterInput;
     return await this.messageData.getMessagesGroupedByConversation(
@@ -325,6 +338,88 @@ export class MessageLogic implements IMessageLogic {
       startDate,
       endDate,
     );
+  }
+
+  async addTagToMessage(
+    addMessageTagDto: AddMessageTagDto,
+    authenticatedUser?: IAuthenticatedUser,
+  ): Promise<ChatMessage> {
+    if (!authenticatedUser) {
+      throw new ForbiddenError('User is not authenticated');
+    }
+
+    if (
+      !(await this.permissions.messagePermissions({
+        user: authenticatedUser,
+        messageId: String(addMessageTagDto.messageId),
+        action: Action.updateMessage,
+      }))
+    ) {
+      throw new ForbiddenError(
+        `User is not authorised to resolve this message`,
+      );
+    }
+
+    const message = await this.messageData.addTag(
+      addMessageTagDto.tag,
+      addMessageTagDto.conversationId,
+      addMessageTagDto.messageId,
+    );
+
+    const addTagEvent = new AddTagEvent({
+      tag : addMessageTagDto.tag,
+      conversationId : addMessageTagDto.conversationId,
+      userId : addMessageTagDto.userId,
+      messageId : addMessageTagDto.messageId,
+    });
+
+    this.conversationChannel.send(
+      addTagEvent,
+      addMessageTagDto.conversationId.toHexString(),
+    );
+
+    return message;
+  }
+
+  async removeTagFromMessage(
+    removeMessageTagDto: RemoveMessageTagDto,
+    authenticatedUser?: IAuthenticatedUser,
+  ): Promise<ChatMessage> {
+    if (!authenticatedUser) {
+      throw new ForbiddenError('User is not authenticated');
+    }
+
+    if (
+      !(await this.permissions.messagePermissions({
+        user: authenticatedUser,
+        messageId: String(removeMessageTagDto.messageId),
+        action: Action.updateMessage,
+      }))
+    ) {
+      throw new ForbiddenError(
+        `User is not authorised to resolve this message`,
+      );
+    }
+
+    const message = await this.messageData.removeTag(
+      removeMessageTagDto.tag,
+      removeMessageTagDto.conversationId,
+      removeMessageTagDto.messageId,
+    );
+
+    const removeTagEvent = new RemoveTagEvent({
+      tag : removeMessageTagDto.tag,
+      conversationId : removeMessageTagDto.conversationId,
+      userId : removeMessageTagDto.userId,
+      messageId : removeMessageTagDto.messageId,
+    });
+
+    this.conversationChannel.send(
+      removeTagEvent,
+      removeMessageTagDto.conversationId.toHexString(),
+    );
+
+    return message;
   }
 
   private setIsSenderBlockedTrue(

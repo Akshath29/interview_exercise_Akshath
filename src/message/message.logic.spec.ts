@@ -10,10 +10,12 @@ import {
   PollDto,
 } from './models/message.dto';
 import {
+  AddTagEvent,
   ConversationChannel,
   DeleteMessageEvent,
   LikeMessageEvent,
   ReactedMessageEvent,
+  RemoveTagEvent,
   ResolveMessageEvent,
   SendMessageEvent,
   UnReactedMessageEvent,
@@ -284,6 +286,39 @@ describe('MessageLogic', () => {
         id: messageId,
         deleted: false,
         resolved: false,
+      };
+    }
+
+    addTag(tag : string, userId: ObjectId, messageId: ObjectId) {
+      return {
+        _id: messageId,
+        text: 'Message 1',
+        senderId: userId,
+        conversationId,
+        created: new Date('2018-05-11T17:47:40.893Z'),
+        sender: { id: '5fe0cce861c8ea54018385af' },
+        conversation: { id: '5fe0cce861c8ea54018385ae' },
+        id: messageId,
+        deleted: false,
+        resolved: false,
+        likes: [],
+        tag : [tag]
+      };
+    }
+
+    removeTag(tag : string, userId: ObjectId, messageId: ObjectId) {
+      return {
+        _id: messageId,
+        text: 'Message 1',
+        senderId: userId,
+        conversationId,
+        created: new Date('2018-05-11T17:47:40.893Z'),
+        sender: { id: '5fe0cce861c8ea54018385af' },
+        conversation: { id: '5fe0cce861c8ea54018385ae' },
+        id: messageId,
+        deleted: false,
+        resolved: false,
+        likes: [],
       };
     }
 
@@ -1290,6 +1325,63 @@ describe('MessageLogic', () => {
       expect(messageData.removeReaction).toHaveBeenCalledTimes(1);
     });
   });
+
+
+  describe('add tag / remove tag', () => {
+    it('Can add tag to a message and data/ send event called', async () => {
+      jest.spyOn(messageData, 'addTag');
+      await messageLogic.addTagToMessage(
+        {
+          userId : validUser.userId,
+          messageId,
+          conversationId,
+          tag: 'tag-x',
+        },
+        validUser,
+      );
+
+      const event = new AddTagEvent({
+        userId: validUser.userId,
+        conversationId,
+        messageId,
+        tag : "tag-x"
+      });
+
+      expect(conversationChannel.send).toHaveBeenCalledWith(
+        event,
+        conversationId.toHexString(),
+      );
+      expect(messageData.addTag).toHaveBeenCalledTimes(1);
+    });
+
+    it('Can remove tag from a message  and data/ send event called', async () => {
+      jest.spyOn(messageData, 'removeTag');
+      await messageLogic.removeTagFromMessage(
+        {
+          userId : validUser.userId,
+          messageId,
+          conversationId,
+          tag : "tag-x",
+        },
+        validUser,
+      );
+
+      const event = new RemoveTagEvent({
+        userId: validUser.userId,
+        conversationId,
+        messageId,
+        tag: 'tag-x',
+      });
+
+      expect(conversationChannel.send).toHaveBeenCalledWith(
+        event,
+        conversationId.toHexString(),
+      );
+
+      expect(messageData.removeTag).toHaveBeenCalledTimes(1);
+    });
+  });
+
 
   describe('addVote', () => {
     it('should be defined', () => {
