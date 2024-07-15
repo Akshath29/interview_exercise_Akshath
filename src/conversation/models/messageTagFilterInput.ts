@@ -12,7 +12,7 @@ export class MessagesTagFilterInput {
   @ApiProperty({
     required: true,
     description:
-      'List of conversationIds for whom the messages are to be checked for tags',
+      'List of conversationIds whom to search for tagged messages',
   })
   conversationIds: string[];
 
@@ -20,5 +20,5 @@ export class MessagesTagFilterInput {
     description: 'tag to get the messages for',
     required: true,
   })
-  tag: string[];
+  tags: string[];
 }

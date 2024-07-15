@@ -42,6 +42,7 @@ import {
   MessageGroupedByConversationOutput,
   MessagesFilterInput,
 } from './models/messagesFilterInput';
+import { MessagesTagFilterInput } from './models/messageTagFilterInput';
 
 export interface IConversationLogic {
   getConversation(
@@ -496,5 +497,11 @@ export class ConversationLogic implements IConversationLogic {
     return await this.messageLogic.getMessagesByConversation(
       messagesFilterInput,
     );
+  }
+
+  async getMessagesByTopic(messagesTagFilterInput : MessagesTagFilterInput){
+    return await this.messageLogic.getMessagesByTags(
+      messagesTagFilterInput,
+    )
   }
 }

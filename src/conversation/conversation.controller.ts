@@ -34,6 +34,7 @@ import {
 } from './models/messagesFilterInput';
 import { isDateDifferenceWithin7Days } from '../message/utils/message.helper';
 import { Response } from 'express';
+import { MessagesTagFilterInput } from './models/messageTagFilterInput';
 
 @Controller('conversation')
 export class ConversationController {
@@ -186,6 +187,30 @@ export class ConversationController {
     }
     return await this.conversationLogic.getMessagesByConversation(
       messagesFilterInput,
+    );
+  }
+
+  @Get('messagesTags')
+  @ApiSecurity('X-API-KEY')
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden',
+  })
+  @HttpCode(200)
+  async getMessagesViaTags(
+    @Query('conversationIds') conversationIds: string[],
+    @Query('tags') tags: string[],
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<MessageGroupedByConversationOutput[]> {
+    const messagesTagFilterInput: MessagesTagFilterInput = {
+      conversationIds,
+      tags
+    };
+    if (tags.length ===  0){
+      res.status(403).send('No tags specified');
+    }
+    return await this.conversationLogic.getMessagesByTopic(
+      messagesTagFilterInput,
     );
   }
 }

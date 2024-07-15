@@ -324,7 +324,7 @@ export class MessageLogic implements IMessageLogic {
   }
 
   async getMessagesByTags(messagesFilterInput: MessagesTagFilterInput) {
-    const { conversationIds, tag } = messagesFilterInput;
+    const { conversationIds, tags: tag } = messagesFilterInput;
     return await this.messageData.getMessagesGroupedByTags(
       conversationIds.map((id) => new Types.ObjectId(id)),
       tag,
