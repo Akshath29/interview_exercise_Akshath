@@ -5,7 +5,7 @@ To understand how to add tags to messages, I first analyzed how tags are current
 - Data Model Change: I modified the ChatMessage schema to accommodate a list for storing tags.
 - Backend Logic Updates: I implemented functions for message data manipulation (e.g., addTag, removeTag, getMessagesGroupedByTags).
 - Business Logic Integration: I updated the message logic layer to utilize the newly created functions for adding, removing, and finding messages by tags.
-- API Integration: Finally, I integrated the add/remove functionality into the message resolvers and implemented finding messages by tags within the conversation logic.
+- Integration to Resolver: Finally, I integrated the add/remove functionality into the message resolvers and implemented finding messages by tags within the conversation logic.
 
 ## Problems I encountered
 Here are some potential challenges I considered:
@@ -18,7 +18,7 @@ Here are some potential challenges I considered:
 
 - Unit Tests: I wrote unit tests for the functionality related to adding, removing, and finding messages by tags (covering message.data, message.logic, and message.resolver).
 
-- Integration Tests: I would add integration tests to verify the entire workflow, from requesting on the endpoint to receiving the response message.
+- Integration Tests: I would perform integration tests to verify the entire workflow, from requesting on the endpoint to receiving the response message.
 
 - User Testing: I would perform user testing to provide valuable insights from the user's perspective, ensuring a positive user experience.
 
@@ -26,4 +26,5 @@ Here are some potential challenges I considered:
 Here are two potential improvements I identified:
 
 - Leveraging Enums for Tags: Using enumerated types (enums) for tags would restrict them to a predefined set of valid options. This helps avoid vague or unhelpful tags, simplifies searching, and prevents users from being overwhelmed with irrelevant tags.
+
 - Indexing Messages by Tags: I considered implementing an index on the tags field to optimize search performance. This avoids iterating through all conversation messages to find those matching specific tags.
