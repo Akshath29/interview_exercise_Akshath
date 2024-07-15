@@ -588,6 +588,58 @@
                 ]
             }
         },
+        "/conversation/messagesTags": {
+            "get": {
+                "operationId": "ConversationController_getMessagesViaTags",
+                "parameters": [
+                    {
+                        "name": "conversationIds",
+                        "required": true,
+                        "in": "query",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    {
+                        "name": "tags",
+                        "required": true,
+                        "in": "query",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "X-API-KEY": []
+                    }
+                ]
+            }
+        },
         "/user-blocks/toggle": {
             "post": {
                 "operationId": "UserBlocksController_toggleUserBlock",

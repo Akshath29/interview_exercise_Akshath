@@ -25,6 +25,7 @@ import {
   MessagesFilterInput,
   MessageGroupedByConversationOutput,
 } from '../conversation/models/messagesFilterInput';
+import { MessageGroupedByTagOutput, MessagesTagFilterInput } from '../conversation/models/messageTagFilterInput';
 
 const conversationId = new ObjectID('5fe0cce861c8ea54018385af');
 const messageId = new ObjectID('5fe0cce861c8ea54018386ab');
@@ -193,6 +194,12 @@ describe('MessageResolver', () => {
     getMessagesByConversation(
       messagesFilterInput: MessagesFilterInput,
     ): Promise<MessageGroupedByConversationOutput[]> {
+      return Promise.resolve([]);
+    }
+
+    getMessagesByTags(
+      messagesFilterInput: MessagesTagFilterInput,
+    ): Promise<MessageGroupedByTagOutput[]> {
       return Promise.resolve([]);
     }
   }

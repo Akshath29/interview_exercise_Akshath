@@ -21,6 +21,8 @@ import {
   LikeMessageDto,
   ResolveMessageDto,
   ReactionDto,
+  AddMessageTagDto,
+  RemoveMessageTagDto,
 } from './models/message.dto';
 import { MessageLogic } from './message.logic';
 import {
@@ -88,6 +90,24 @@ export class MessageResolver {
       getMessageDto,
       authenticatedUser,
     );
+  }
+
+  @Mutation(() => ChatMessage)
+  @UseGuards(GqlAuthGuard)
+  async addTagToConversationMessage(
+    @Args('addMessageTagDto') addMessageTagDto: AddMessageTagDto,
+    @AuthenticatedUser() authenticatedUser: IAuthenticatedUser,
+  ): Promise<ChatMessage> {
+    return await this.messageLogic.addTagToMessage(addMessageTagDto, authenticatedUser);
+  }
+
+  @Mutation(() => ChatMessage)
+  @UseGuards(GqlAuthGuard)
+  async removeTagFromConversationMessage(
+    @Args('removeMessageTagDto') removeMessageTagDto: RemoveMessageTagDto,
+    @AuthenticatedUser() authenticatedUser: IAuthenticatedUser,
+  ): Promise<ChatMessage> {
+    return await this.messageLogic.removeTagFromMessage(removeMessageTagDto, authenticatedUser);
   }
 
   @Mutation(() => ChatMessage)
