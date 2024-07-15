@@ -115,7 +115,7 @@ describe('MessageData', () => {
         { conversationId, text: 'Message to delete' },
         senderId,
       );
-      
+
       // Make sure that it started off as not deleted
       expect(message.deleted).toEqual(false);
 
@@ -145,7 +145,7 @@ describe('MessageData', () => {
           conversation: { id: conversationIdAdd.toHexString() },
           likesCount: 0,
           sender: { id: senderId.toHexString() },
-          tags: [{"tag" : "tagx"}]
+          tags: ["tagx"]
         }
       );
 
@@ -171,7 +171,7 @@ describe('MessageData', () => {
           conversation: { id: conversationIdDup.toHexString() },
           likesCount: 0,
           sender: { id: senderId.toHexString() },
-          tags: [{"tag" : "tagx"}]
+          tags: ["tagx"]
         }
       );
     });
@@ -226,7 +226,7 @@ describe('MessageData', () => {
           conversation: { id: conversationIdDup.toHexString() },
           likesCount: 0,
           sender: { id: senderId.toHexString() },
-          tags: [{"tag" : "tagy"}, {"tag" : "tagz"}]
+          tags: ["tagy", "tagz"]
         }
       );
     });
@@ -257,5 +257,76 @@ describe('MessageData', () => {
     });
 
   });
+
+  describe('Removing tags from messages', () => {
+    it('successfully removes a tag', async () => {
+      const conversationIdRem = new ObjectID();
+      const message = await messageData.create(
+        { conversationId : conversationIdRem, text: 'Hello world' },
+        senderId,
+      );
+      const msgAddTag = await messageData.addTag("tagx", senderId, message.id);
+      const msgRemoveTag = await messageData.removeTag("tagx", senderId, msgAddTag.id);
+      expect(msgRemoveTag).toMatchObject(
+        {
+          likes: [],
+          resolved: false,
+          deleted: false,
+          reactions: [],
+          text: 'Hello world',
+          senderId: senderId,
+          conversationId: conversationIdRem,
+          conversation: { id: conversationIdRem.toHexString() },
+          likesCount: 0,
+          sender: { id: senderId.toHexString() },
+          tags: []
+        }
+      );
+
+    });
+
+    it('Find messages based on the tag provided', async () => {
+      const conversationIdFind = new ObjectID();
+      const message = await messageData.create(
+        { conversationId : conversationIdFind, text: 'This message has tagx' , tags : ["tagx"]},
+        senderId,
+      );
+      const message2 = await messageData.create(
+        { conversationId : conversationIdFind, text: 'This message has tagy' , tags : ["tagy"]},
+        senderId,
+      );
+      const allmsgs = await messageData.getMessagesGroupedByTag([conversationIdFind], ["tagx"])
+      expect(allmsgs).toMatchObject(
+        [{"_id": ["tagx"], "messages": [{"message": "This message has tagx"}]}]
+      );
+    });
+
+  });
+
+  it('Find messages based on the tag provided but only in respective conversationIDs', async () => {
+    const conversationIdFind2 = new ObjectID();
+    const message = await messageData.create(
+      { conversationId : conversationIdFind2, text: 'This message has tagx' , tags : ["tagx"]},
+      senderId,
+    );
+    const message2 = await messageData.create(
+      { conversationId : conversationIdFind2, text: 'This message has tagy' , tags : ["tagy"]},
+      senderId,
+    );
+
+    const message3 = await messageData.create(
+      { conversationId : new ObjectID(), text: 'This message has tagx but not the right conversation Id' , tags : ["tagx"]},
+      senderId,
+    );
+    const msgsWithTagX = await messageData.getMessagesGroupedByTag([conversationIdFind2], ["tagx"])
+    const allmsgs = await messageData.getMessagesGroupedByTag([conversationIdFind2], ["tagx", "tagy"])
+    expect(msgsWithTagX).toMatchObject(
+      [{"_id": ["tagx"], "messages": [{"message": "This message has tagx"}]}]
+    );
+    expect(allmsgs).toMatchObject(
+      [{"_id": ["tagx"], "messages": [{"message": "This message has tagx"}]},
+      {"_id": ["tagy"], "messages": [{"message": "This message has tagy"}]}]
+    );
+});
 
 });

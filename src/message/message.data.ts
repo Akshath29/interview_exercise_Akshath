@@ -11,6 +11,7 @@ import { MessageDto, GetMessageDto } from './models/message.dto';
 import { ObjectID } from 'mongodb';
 import { createRichContent } from './utils/message.helper';
 import { MessageGroupedByConversationOutput } from '../conversation/models/messagesFilterInput';
+import { MessageGroupedByTagOutput } from '../conversation/models/messageTagFilterInput';
 
 @Injectable()
 export class MessageData {
@@ -183,13 +184,13 @@ export class MessageData {
             _id: messageId,
             tags: {
               $not: {
-                $elemMatch: {tag : tag},
+                $in : [tag],
               },
             },
           },
           update: {
             $push: {
-              tags: {tag: tag}
+              tags: [tag]
             },
           },
         },
@@ -224,12 +225,12 @@ export class MessageData {
           filter: {
             _id: messageId,
             tags: {
-                $elemMatch: {tag : tag},
+                $in : [tag],
             },
           },
           update: {
             $pull: {
-              tags: {tag : tag}
+              tags: tag
             },
           },
         },
@@ -347,28 +348,28 @@ export class MessageData {
     return chatMessages.map((chatMessage) => chatMessageToObject(chatMessage));
   }
 
-  async getMessagesGroupedByTopic(
+  async getMessagesGroupedByTag(
     conversationIds: ObjectID[],
-    tag?: string[],
-  ): Promise<MessageGroupedByConversationOutput[]> {
+    tagsRequested?: string[],
+  ): Promise<MessageGroupedByTagOutput[]> {
     const matchQuery: FilterQuery<ChatMessage> = {
       $match: {
         conversationId: {
           $in: conversationIds,
         },
         tags: {
-          $elemMatch : {tag : tag}
-        } 
+          $in : tagsRequested
+        }, 
       },
     };
-    const groupedChatMessages = await this.chatMessageModel.aggregate([
+    const groupedTopicMessages = await this.chatMessageModel.aggregate([
       matchQuery,
       {
         $group: {
-          _id: '$conversationId',
+          _id: '$tags',
           messages: {
             $push: {
-              senderId: '$senderId',
+              senderId: '$sender',
               message: '$text',
             },
           },
@@ -376,13 +377,13 @@ export class MessageData {
       },
       {
         $project: {
-          conversationId: '$_id',
-          tag : tag,
+          conversationId: '$conversationId',
+          tags : '$tags',
           messages: 1,
         },
       },
     ]);
-    return groupedChatMessages;
+    return groupedTopicMessages;
   }
 
   async getMessagesGroupedByConversation(

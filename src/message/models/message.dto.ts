@@ -183,13 +183,41 @@ export class ReactionDto {
 
 @InputType()
 export class AddMessageTagDto {
-  @Field(() => String)
-  tag: string;
+  @Field(() => ObjectID)
+  conversationId: ObjectID;
 
   @Field(() => ObjectID)
   messageId: ObjectID;
 
+  @Field(() => String)
+  tag: string;
+}
+
+@InputType()
+export class RemoveMessageTagDto {
   @Field(() => ObjectID)
   conversationId: ObjectID;
+
+  @Field(() => ObjectID)
+  messageId: ObjectID;
+
+  @Field(() => String)
+  tag: string;
 }
+
+@InputType()
+export class GetTagMessageDto {
+  @Field()
+  conversationId: ObjectID;
+
+  @Field({ nullable: true })
+  offsetId?: ObjectID;
+
+  @Field()
+  tag : string;
+
+  @Field({ defaultValue: 40 })
+  limit: number;
+}
+
 
