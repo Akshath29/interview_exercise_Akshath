@@ -118,6 +118,9 @@ export class MessageDto {
 
   @Field(() => RichContentDto, { nullable: true })
   richContent?: RichContentDto;
+
+  @Field(() => String, {defaultValue : []})
+  tags?: String[];
 }
 
 // TODO Min - Max on limit

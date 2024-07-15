@@ -24,13 +24,12 @@ export class MessageData {
     senderId: ObjectID,
   ): Promise<ChatMessageModel> {
     const chatMessage = new this.chatMessageModel();
-
     chatMessage.text = data.text;
     chatMessage.senderId = senderId;
     chatMessage.conversationId = data.conversationId;
     chatMessage.created = new Date();
     chatMessage.deleted = false;
-    chatMessage.tags = [];
+    chatMessage.tags = data.tags;
     createRichContent(data, chatMessage);
 
     const dbResult = await chatMessage.save();
